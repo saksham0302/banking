@@ -143,7 +143,9 @@ class Customer {
                 accMobileNo.clear();
                 cin >> accMobileNo;
 
-                if(accMobileNo.length() == 10) {
+                bool isNumber = verifyMobileIsNumber(accMobileNo);
+
+                if(accMobileNo.length() == 10 && isNumber) {
                     check = false;
                 }
 
@@ -151,6 +153,17 @@ class Customer {
                     cout << "\nPlease enter the mobile number again: ";
             }
             return accMobileNo;
+        }
+
+
+        //used to check whether the input entered in string is a number
+        bool verifyMobileIsNumber (string &accMobileNo) {
+            for (char &ch : accMobileNo) {
+                if (isdigit(ch) == 0) {
+                    return false;
+                }
+            }
+            return true;
         }
 
 
