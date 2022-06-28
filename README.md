@@ -15,7 +15,7 @@ All the Essential Functionalities are password protected. And Password hashing i
 
 
 ### Running the Project
-#### Prerequisite : `g++` Compiler
+#### Prerequisite :
 1. `g++` Compiler
 2. Add `MYSQL Server Files` in the project to add addditional header    files for compilation.
 
