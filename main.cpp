@@ -44,11 +44,13 @@ class Customer {
             obj = mysql_real_connect(obj, "localhost" , "root", "Banking@Admin", "bank", 3306, NULL, 0);
 
             if (obj) {
+
                 cout << "*************Logged into database***************\n" <<endl;
                 return obj;
             }
 
             else {
+
                 cout << "Failed connection to database!!!!" <<endl;
                 return obj;
             }
@@ -66,10 +68,13 @@ class Customer {
                 cout << "\n1. Admin" << endl;
                 cout << "2. User" << endl;
                 cout << "3. Exit" << endl;
+
                 cout << "\nEnter your choice: ";
+                choice = 0;
                 cin >> choice;
 
                 switch(choice) {
+
                     case 1 : adminLogin();
                              break;
 
@@ -96,6 +101,7 @@ class Customer {
 
             while (limit) {
 
+                adminPwd.clear();
                 cout << "\nEnter admin password: ";
                 cin >> adminPwd;
                 cout << endl;
@@ -126,10 +132,14 @@ class Customer {
 
 
         //used to make queries to sql server
-        int queryToSql (MYSQL* obj, string query) {
+        int queryToSql (MYSQL* obj) {
 
+            query.clear();
+            query = ss.str();                           //convert to str
             const char* q = query.c_str();       //used to convert the string in c type char pointer
-            mysql_query(obj, q);                 //sending the queries to server
+            qstate = 0;
+            qstate = mysql_query(obj, q);                 //sending the queries to server
+
             return qstate;
         }
 
@@ -139,20 +149,20 @@ class Customer {
 
             check = true;
 
-            while(check) {
+            while (check) {
 
                 accMobileNo.clear();
                 cin >> accMobileNo;
 
                 bool isNumber = verifyStringIsNumber(accMobileNo);
 
-                if(accMobileNo.length() == 10 && isNumber) {
+                if (accMobileNo.length() == 10 && isNumber)
                     check = false;
-                }
 
                 else
                     cout << "\nPlease enter the mobile number again: ";
             }
+
             return accMobileNo;
         }
 
@@ -162,32 +172,33 @@ class Customer {
 
             check = true;
 
-            while(check) {
+            while (check) {
 
                 accPin.clear();
                 cin >> accPin;
 
                 bool isNumber = verifyStringIsNumber(accPin);
 
-                if(accPin.length() == 4 && isNumber) {
+                if (accPin.length() == 4 && isNumber)
                     check = false;
-                }
 
                 else
-                    cout << "\nPlease enter the pin again: ";
+                    cout << "\nPin can't contain character other than numbers and the length of your pin should be 4.\nPlease enter the pin again: ";
             }
+
             return accPin;
         }
 
 
-        //used to check whether the input entered in string is a number
+        //used to check whether the input entered in a string is number
         bool verifyStringIsNumber (string &String) {
 
             for (char &ch : String) {
-                if (isdigit(ch) == 0) {
+
+                if (isdigit(ch) == 0)
                     return false;
-                }
             }
+
             return true;
         }
 
@@ -200,91 +211,107 @@ class Customer {
             check = true;
             while (check) {
 
+                No = 0;
                 cin >> No;
+                accNo.clear();
                 accNo = to_string(No);      //convert numerical account no to string to manipulate for queries
                 ss.str("");
                 ss << "SELECT acc_No FROM details WHERE acc_No = '" + accNo + "' ";      //sql query
-                query.clear();
-                query = ss.str();                           //convert to str
-                qstate = queryToSql(obj, query);
+                qstate = queryToSql(obj);
                 res = mysql_store_result(obj);              //store the result of queries
 
-                if (mysql_num_rows(res) == 0) {              //to receive the number of rows in query result
-                    cout << "\nAccount number does not exist, please enter valid account number: " ;
-                    mysql_free_result(res);
+                if (mysql_num_rows(res) == 0) {             //to receive the number of rows in query result
+
+                        cout << "\nAccount number does not exist, please enter valid account number: " ;
+                        mysql_free_result(res);
                 }
 
                 else {
-                    mysql_free_result(res);
-                    check = false;
+
+                        mysql_free_result(res);
+                        check = false;
                 }
             }
+
             return accNo;
         }
 
 
         //used to verify whether the passsword matches with account number or not
-        string verifyAccPwd(MYSQL* obj) {
+        void verifyAccPwd(MYSQL* obj) {
 
-            MYSQL_RES* res;
-            check = true;
+            if (obj) {
 
-            while (check) {
+                MYSQL_RES* res;
+                check = true;
 
-                accPwd.clear();
-                cin >> accPwd;
-                accPwd = to_string(stringHashing(accPwd));
+                while (check) {
 
-                ss.str("");
-                ss << "SELECT acc_No FROM balance WHERE acc_No = '" + accNo + "' AND acc_Pwd = '" + accPwd + "' ";
-                query.clear();
-                query = ss.str();
-                qstate = queryToSql(obj, query);
-                res = mysql_store_result(obj);
+                    accPwd.clear();
+                    cin >> accPwd;
+                    accPwd = to_string(stringHashing(accPwd));
 
-                if (mysql_num_rows(res) == 0) {
-                    mysql_free_result(res);
-                    cout << "\nPlease enter correct password of your account: " ;
+                    ss.str("");
+                    ss << "SELECT acc_No FROM balance WHERE acc_No = '" + accNo + "' AND acc_Pwd = '" + accPwd + "' ";
+                    qstate = queryToSql(obj);
+                    res = mysql_store_result(obj);
+
+                    if (mysql_num_rows(res) == 0) {
+
+                        mysql_free_result(res);
+                        cout << "\nPlease enter correct password of your account: " ;
+                    }
+
+                    else {
+
+                        mysql_free_result(res);                     //used to empty the stored result of queries
+                        check = false;
+                    }
                 }
 
-                else {
-                    mysql_free_result(res);                     //used to empty the stored result of queries
-                    check = false;
-                }
+                userAccPwd = accPwd;
             }
-            return accPwd;
+
+            else
+                Exit(obj);
         }
 
 
         //used to verify whether the pin matches with account number or not
         void verifyAccPin(MYSQL* obj) {
 
-            MYSQL_RES* res;
-            check = true;
+            if (obj) {
 
-            while (check) {
+                MYSQL_RES* res;
+                check = true;
 
-                accPin.clear();
-                cin >> accPin;
-                accPin = to_string(stringHashing(accPin));
+                while (check) {
 
-                ss.str("");
-                ss << "SELECT acc_No FROM balance WHERE acc_No = '" + accNo + "' AND acc_Pin = '" + accPin + "' ";
-                query.clear();
-                query = ss.str();
-                qstate = queryToSql(obj, query);
-                res = mysql_store_result(obj);
+                    accPin.clear();
+                    cin >> accPin;
+                    accPin = to_string(stringHashing(accPin));
 
-                if (mysql_num_rows(res) == 0) {
-                    mysql_free_result(res);
-                    cout << "\nPlease enter correct pin of your account: " ;
-                }
+                    ss.str("");
+                    ss << "SELECT acc_No FROM balance WHERE acc_No = '" + userAccNo + "' AND acc_Pin = '" + accPin + "' ";
+                    qstate = queryToSql(obj);
+                    res = mysql_store_result(obj);
 
-                else {
-                    mysql_free_result(res);                     //used to empty the stored result of queries
-                    check = false;
+                    if (mysql_num_rows(res) == 0) {
+
+                        mysql_free_result(res);
+                        cout << "\nPlease enter correct pin of your account: " ;
+                    }
+
+                    else {
+
+                        mysql_free_result(res);                     //used to empty the stored result of queries
+                        check = false;
+                    }
                 }
             }
+
+            else
+                Exit(obj);
         }
 
 
@@ -299,9 +326,11 @@ class Customer {
                 cout << "3. Change details of an account" <<endl;
                 cout << "4. Check details of an account" <<endl;
                 cout << "5. Go back to Main Menu" <<endl;
-                cout << "\nEnter your choice: ";
 
+                cout << "\nEnter your choice: ";
+                choice = 0;
                 cin >> choice;
+
                 switch(choice) {
 
                     case 1 : system("CLS");
@@ -326,11 +355,8 @@ class Customer {
                 }
             }
 
-            else {
-                cout << "Failed to fetch database!!1" <<endl;
-                cout << "\n" << mysql_error(obj) <<endl;
-                exit(0);
-            }
+            else
+                Exit(obj);
         }
 
 
@@ -341,38 +367,47 @@ class Customer {
 
                 cout << "Enter the customer's name: ";
                 cin.ignore(1, '\n');
+                accName.clear();
                 getline(cin, accName, '\n');
 
                 cout << "\nEnter the customer's account number: ";
                 MYSQL_RES* res;
                 check = true;
 
-                //checking account number existence
+                //to check if account number is positive
                 while (check) {
 
                     bool checkout = true;
+
                     do {
+
+                        No = 0;
                         cin >> No;
+
                         if (No > 0)
                             checkout = false;
+
                         else
                             cout << "\nAccount Number can't be negative or zero. Please enter it again: " ;
+
                     } while (checkout);
 
+                    //checking account number existence
+                    accNo.clear();
                     accNo = to_string(No);
                     ss.str("");
                     ss << "SELECT acc_No FROM details WHERE acc_No = '" + accNo + "' ";
-                    query.clear();
-                    query = ss.str();
-                    qstate = queryToSql(obj, query);
+                    qstate = queryToSql(obj);
                     res = mysql_store_result(obj);
 
                     if (mysql_num_rows(res) != 0) {            //to check if the result had any rows in it
+
                         mysql_free_result(res);
                         cout << "\nAccount Number already exists please provide a new one: " ;
                     }
 
                     else {
+
                         mysql_free_result(res);
                         check = false;
                     }
@@ -398,23 +433,22 @@ class Customer {
                 if (qstate == 0) {
 
                     Balance = 0;
+                    accBalance.clear();
                     accBalance = to_string(Balance);               //default balance is stored
 
                     ss.str("");
                     //as the account is created in table details this query is used to add the rest details in balance table
                     ss << "INSERT INTO balance (acc_No, acc_Balance, acc_Pwd, acc_Pin) VALUES ('"+ accNo +"','"+ accBalance +"','"+ accPwd +"', '"+ accPin +"')";
-                    query.clear();
-                    query = ss.str();
-                    qstate = queryToSql(obj, query);
+                    qstate = queryToSql(obj);
 
                     if (qstate != 0 ) {
+
                         ss.str("");
                         //if the rest of the details from new account are not added in balance
                         //this query is to remove the added details from details table
                         ss << "DELETE FROM details where acc_No = '"+ accNo +"')";
-                        query.clear();
-                        query = ss.str();
-                        qstate = queryToSql(obj, query);
+                        qstate = queryToSql(obj);
+
                         system("CLS");
                         cout << "Failed to insert record!!!\n" <<endl;
                         cout << mysql_error(obj) << "\n" <<endl;
@@ -423,6 +457,7 @@ class Customer {
                     }
 
                     else {
+
                         system("CLS");
                         cout << "Account Created!!!\n" <<endl;
                         adminMenu(obj);
@@ -430,6 +465,7 @@ class Customer {
                 }
 
                 else {
+
                     system("CLS");
                     cout << "Failed to insert record!!!\n" <<endl;
                     cout << mysql_error(obj) << "\n" <<endl;
@@ -438,11 +474,8 @@ class Customer {
                 }
             }
 
-            else {
-                cout << "Failed to fetch database!!1" <<endl;
-                cout << "\n" << mysql_error(obj) <<endl;
-                exit(0);
-            }
+            else
+                Exit(obj);
         }
 
 
@@ -455,34 +488,32 @@ class Customer {
                 accNo = verifyAccNo(obj);
 
                 cout << "\nPlease ask the customer to enter the account password: " ;
+                accPwd.clear();
                 cin >> accPwd;
                 accPwd = to_string(stringHashing(accPwd));
 
                 ss.str("");
                 //query to delete account from tables detail and balance
                 ss << "DELETE details, balance FROM details inner join balance on details.acc_No = balance.acc_No WHERE (details.acc_No = '" + accNo + "' and balance.acc_Pwd = '" + accPwd + "')";
-                query.clear();
-                query = ss.str();
-                qstate = queryToSql(obj, query);
+                qstate = queryToSql(obj);
 
-                if(qstate == 0 && mysql_affected_rows(obj) != 0) {
+                if (qstate == 0 && mysql_affected_rows(obj) != 0) {
+
                     system("CLS");
                     cout << "Account Deleted!!!\n" <<endl;
                     adminMenu(obj);
                 }
 
                 else {
+
                     system("CLS");
                     cout << "Please verify your account password!!!\n" <<endl;
                     accountDeletion(obj);
                 }
             }
 
-            else {
-                cout << "Failed to fetch database!!1" <<endl;
-                cout << "\n" << mysql_error(obj) <<endl;
-                exit(0);
-            }
+            else
+                Exit(obj);
         }
 
 
@@ -490,13 +521,16 @@ class Customer {
         void changeAccountDetailsMenu(MYSQL* obj) {
 
             if (obj) {
+
                 cout << "*************Change Details*********************" <<endl;
                 cout << "\n1. Change name" <<endl;
                 cout << "2. Change mobile number" <<endl;
                 cout << "3. Go back to admin menu" <<endl;
-                cout << "\nEnter your choice: " ;
 
+                cout << "\nEnter your choice: " ;
+                choice = 0;
                 cin >> choice;
+
                 switch (choice) {
 
                     case 1 : system("CLS");
@@ -513,11 +547,8 @@ class Customer {
                 }
             }
 
-            else {
-                cout << "Failed to fetch database!!1" <<endl;
-                cout << "\n" << mysql_error(obj) <<endl;
-                exit(0);
-            }
+            else
+                Exit(obj);
         }
 
 
@@ -530,37 +561,35 @@ class Customer {
                 accNo = verifyAccNo(obj);
 
                 cout << "\nPlease ask the customer to enter the account password: " ;
-                accPwd = verifyAccPwd(obj);
+                verifyAccPwd(obj);
 
                 cout << "\nEnter the new name of customer: " <<endl;
                 cin.ignore(1, '\n');
+                accName.clear();
                 getline(cin, accName, '\n');
 
                 ss.str("");
                 //update name in table details
-                ss << "UPDATE details, balance SET details.acc_Name = '" + accName + "' WHERE (details.acc_No = '" + accNo + "' and balance.acc_No = '" + accNo + "' and balance.acc_Pwd = '" + accPwd + "')";
-                query.clear();
-                query = ss.str();
-                qstate = queryToSql(obj, query);
+                ss << "UPDATE details, balance SET details.acc_Name = '" + accName + "' WHERE (details.acc_No = '" + accNo + "' and balance.acc_No = '" + accNo + "')";
+                qstate = queryToSql(obj);
 
-                if(qstate == 0 && mysql_affected_rows(obj) != 0) {
+                if (qstate == 0 && mysql_affected_rows(obj) != 0) {
+
                     system("CLS");
                     cout << "Changes made in account!!!\n" <<endl;
                     adminMenu(obj);
                 }
 
                 else {
+
                     system("CLS");
-                    cout << "Please verify the details filled!! Either your account password is incorrect or new and old name are same!!!\n" <<endl;
-                    changeName(obj);
+                    cout << "Couldn't update name!!\n\nNew and old name are same!!!\n" <<endl;
+                    changeAccountDetailsMenu(obj);
                 }
             }
 
-            else {
-                cout << "Failed to fetch database!!1" <<endl;
-                cout << "\n" << mysql_error(obj) <<endl;
-                exit(0);
-            }
+            else
+                Exit(obj);
         }
 
 
@@ -573,36 +602,34 @@ class Customer {
                 accNo = verifyAccNo(obj);
 
                 cout << "\nPlease ask the customer to enter the account password: " ;
-                accPwd = verifyAccPwd(obj);
+                verifyAccPwd(obj);
 
                 cout << "\nEnter the new mobile number of customer: " <<endl;
                 accMobileNo = verifyMobileNoLength();
 
                 ss.str("");
                 //update details in table details
-                ss << "UPDATE details, balance SET details.acc_MobileNo = '" + accMobileNo + "' WHERE (details.acc_No = '" + accNo + "' and balance.acc_No = '" + accNo + "' and balance.acc_Pwd = '" + accPwd + "')";
-                query.clear();
-                query = ss.str();
-                qstate = queryToSql(obj, query);
+                ss << "UPDATE details, balance SET details.acc_MobileNo = '" + accMobileNo + "' WHERE (details.acc_No = '" + accNo + "' and balance.acc_No = '" + accNo + "')";
+                qstate = queryToSql(obj);
 
                 if (qstate == 0 && mysql_affected_rows(obj) != 0) {
+
                     system("CLS");
                     cout << "Changes made in account!!!\n" <<endl;
                     adminMenu(obj);
                 }
 
                 else {
+
                     system("CLS");
-                    cout << "Please verify the details filled!! Either your account password is incorrect or new and old mobile numbers are same!!!\n" <<endl;
-                    changeMobileNo(obj);
+                    cout << "Couldn't update mobile numbers!!\n\nNew and old mobile numbers are same!!!\n" <<endl;
+                    cout << "Press enter to go back." ;
+                    changeAccountDetailsMenu(obj);
                 }
             }
 
-            else {
-                cout << "Failed to fetch database!!1" <<endl;
-                cout << "\n" << mysql_error(obj) <<endl;
-                exit(0);
-            }
+            else
+                Exit(obj);
         }
 
 
@@ -617,9 +644,7 @@ class Customer {
                 ss.str("");
                 //query to receive the details
                 ss << "SELECT * FROM details WHERE acc_No = '" + accNo + "' ";
-                query.clear();
-                query = ss.str();
-                qstate = queryToSql(obj, query);
+                qstate = queryToSql(obj);
 
                 MYSQL_ROW row;
                 MYSQL_RES* res;
@@ -629,36 +654,34 @@ class Customer {
 
                     int Count = mysql_num_fields(res);
                     string details[] = {"Acc No.", "Name", "Mobile Number"};
-
                     cout << endl;
+
                     //used to display each row received as a result in sql query
                     while ((row = mysql_fetch_row(res))) {
-                        for (int i = 0; i < Count; i++) {
+
+                        for (int i = 0; i < Count; i++)
                             cout << details[i] << ": " << row[i] <<endl;
-                        }
+
                         cout << endl;
                     }
 
-                    cout << "Press any key to continue." <<endl;
-                    cin.ignore();
-                    cin.get();
+                    cout << "Press any key to continue." ;
+                    pressEnter();
                     system("CLS");
                     mysql_free_result(res);
                     adminMenu(obj);
                 }
 
                 else {
+
                     cout << "\nPlease check the account Number!!!\n" <<endl;
                     mysql_free_result(res);
                     checkAccountDetails(obj);
                 }
             }
 
-            else {
-                cout << "Failed to fetch database!!1" <<endl;
-                cout << "\n" << mysql_error(obj) <<endl;
-                exit(0);
-            }
+            else
+                Exit(obj);
         }
 
 
@@ -675,68 +698,75 @@ class Customer {
                 cout << "\nIf you are logging in for the first time the default password is \"User@1234\". \nWe strongly recommend you to change it. " <<endl;
                 cout << "\nEnter your account number: " ;
 
+                userAccNo.clear();
                 userAccNo = verifyAccNo(obj);
 
+                userAccPwd.clear();
                 cout << "\nEnter your account password: " ;
-                userAccPwd = verifyAccPwd(obj);
+                verifyAccPwd(obj);
 
                 userMenu(obj);
             }
 
-            else {
-                cout << "Failed to fetch database!!1" <<endl;
-                cout << "\n" << mysql_error(obj) <<endl;
-                exit(0);
-            }
+            else
+                Exit(obj);
         }
 
 
         //features for user
         void userMenu(MYSQL* obj) {
 
-            system("CLS");
+            if (obj) {
 
-            cout << "*****************Welcome User*******************" << endl;
-            cout << "\n1. Check details of your account" <<endl;
-            cout << "2. Change password of your account" <<endl;
-            cout << "3. Change pin of your account" <<endl;
-            cout << "4. Withdraw money from the account" <<endl;
-            cout << "5. Deposit money in the account" <<endl;
-            cout << "6. Transfer money to another account" <<endl;
-            cout << "7. Go back to Main Menu" <<endl;
-            cout << "\nEnter your choice: ";
+                system("CLS");
 
-            cin >> choice;
-            switch(choice) {
+                cout << "*****************Welcome User*******************" << endl;
+                cout << "\n1. Check details of your account" <<endl;
+                cout << "2. Change password of your account" <<endl;
+                cout << "3. Change pin of your account" <<endl;
+                cout << "4. Withdraw money from the account" <<endl;
+                cout << "5. Deposit money in the account" <<endl;
+                cout << "6. Transfer money to another account" <<endl;
+                cout << "7. Go back to Main Menu" <<endl;
 
-                case 1 : system("CLS");
-                         checkDetails(obj);
-                         break;
+                cout << "\nEnter your choice: ";
+                choice = 0;
+                cin >> choice;
 
-                case 2 : system("CLS");
-                         changePassword(obj);
-                         break;
+                switch(choice) {
 
-                case 3 : system("CLS");
-                         changePin(obj);
-                         break;
+                    case 1 : system("CLS");
+                             checkDetails(obj);
+                             break;
 
-                case 4 : system("CLS");
-                         withdrawMoney(obj);
-                         break;
+                    case 2 : system("CLS");
+                             changePassword(obj);
+                             break;
 
-                case 5 : system("CLS");
-                         depositMoney(obj);
-                         break;
+                    case 3 : system("CLS");
+                             changePin(obj);
+                             break;
 
-                case 6 : system("CLS");
-                         transferMoney(obj);
-                         break;
+                    case 4 : system("CLS");
+                             withdrawMoney(obj);
+                             break;
 
-                default : mysql_close(obj);
-                          mainMenu();
-                          break;
+                    case 5 : system("CLS");
+                             depositMoney(obj);
+                             break;
+
+                    case 6 : system("CLS");
+                             transferMoney(obj);
+                             break;
+
+                    default : mysql_close(obj);
+                              mainMenu();
+                              break;
+                }
             }
+
+            else
+                Exit(obj);
         }
 
 
@@ -748,9 +778,7 @@ class Customer {
                 ss.str("");
                 //query to receive the details and balance
                 ss << "SELECT d.acc_No, d.acc_Name, d.acc_MobileNo, b.acc_Balance FROM details d INNER JOIN balance b ON d.acc_No = b.acc_No  WHERE d.acc_No = '" + userAccNo + "' ";
-                query.clear();
-                query = ss.str();
-                qstate = queryToSql(obj, query);
+                qstate = queryToSql(obj);
 
                 MYSQL_ROW row;
                 MYSQL_RES* res;
@@ -762,35 +790,33 @@ class Customer {
                     string details[] = {"Acc No.", "Name", "Mobile Number", "Balance"};
 
                     //used to display each row received as a result in sql query
-                    while ((row = mysql_fetch_row(res))) {
-                        for (int i = 0; i < Count; i++) {
+                    while (( row = mysql_fetch_row(res) )) {
+
+                        for (int i = 0; i < Count; i++)
                             cout  << details[i] << ": " << row[i] <<endl;
-                        }
+
                         cout << endl;
                     }
-                    cout << "Press any key to continue." <<endl;
-                    cin.ignore();
-                    cin.get();
+                    cout << "Press any key to continue." ;
+                    pressEnter();
                     system("CLS");
                     mysql_free_result(res);
                     userMenu(obj);
                 }
+
                 else {
+
                     cout << "Trouble fetching details!!!!" <<endl;
-                    cout << "\nPress any key to go back to User Login and please login again." <<endl;
-                    cin.ignore();
-                    cin.get();
+                    cout << "\nPress any key to go back to User Login and please login again." ;
+                    pressEnter();
                     mysql_free_result(res);
                     mysql_close(obj);
                     userLogin();
                 }
             }
 
-            else {
-                cout << "Failed to fetch database!!1" <<endl;
-                cout << "\n" << mysql_error(obj) <<endl;
-                exit(0);
-            }
+            else
+                Exit(obj);
         }
 
 
@@ -815,22 +841,23 @@ class Customer {
                     ss.str("");
                     //query to update the password
                     ss << "UPDATE balance SET acc_Pwd = '" + accPwd + "' WHERE acc_No = '" + userAccNo + "' ";
-                    query.clear();
-                    query = ss.str();
-                    qstate = queryToSql(obj, query);
+                    qstate = queryToSql(obj);
 
-                    if(qstate == 0 && mysql_affected_rows(obj) != 0) {
+                    if (qstate == 0 && mysql_affected_rows(obj) != 0) {
+
                         system("CLS");
                         cout << "Password changed!!!\n" <<endl;
-                        cout << "\nPress any key to go back to user menu. " <<endl;
-                        cin.ignore();
-                        cin.get();
+                        cout << "\nPress any key to go back to user menu. " ;
+                        pressEnter();
                         userMenu(obj);
                     }
 
                     else {
+
                         system("CLS");
                         cout << "Couldn't update password. New password same as old password.\n" <<endl;
+                        cout << "Press enter to continue." ;
+                        pressEnter();
                         userMenu(obj);
                     }
                 }
@@ -842,11 +869,8 @@ class Customer {
                 }
             }
 
-            else {
-                cout << "Failed to fetch database!!1" <<endl;
-                cout << "\n" << mysql_error(obj) <<endl;
-                exit(0);
-            }
+            else
+                Exit(obj);
 
         }
 
@@ -858,7 +882,7 @@ class Customer {
 
                 string pin = "";
 
-                cout << "Length of pin can't exceed 4 characters and characters should necessarily be numbers.\n" <<endl;
+                cout << "Your pin should be of 4 digits.\n" <<endl;
 
                 cout << "Please enter new pin: " ;
                 accPin.clear();
@@ -874,38 +898,59 @@ class Customer {
                     ss.str("");
                     //query to update the pin
                     ss << "UPDATE balance SET acc_Pin = '" + accPin + "' WHERE acc_No = '" + userAccNo + "' ";
-                    query.clear();
-                    query = ss.str();
-                    qstate = queryToSql(obj, query);
+                    qstate = queryToSql(obj);
 
-                    if(qstate == 0 && mysql_affected_rows(obj) != 0) {
+                    if (qstate == 0 && mysql_affected_rows(obj) != 0) {
+
                         system("CLS");
                         cout << "Pin changed!!!\n" <<endl;
-                        cout << "\nPress any key to go back to user menu. " <<endl;
-                        cin.ignore();
-                        cin.get();
+                        cout << "\nPress enter to go back to user menu." ;
+                        pressEnter();
                         userMenu(obj);
                     }
 
                     else {
+
                         system("CLS");
                         cout << "Couldn't update pin. New pin same as old pin.\n" <<endl;
+                        cout << "Press enter to continue." ;
+                        pressEnter();
                         userMenu(obj);
                     }
                 }
 
                 //to check if the new pin mathces old pin
                 else {
+
                     cout << "\nBoth pins don't match. Please enter the values again.\n" <<endl;
                     changePin(obj);
                 }
             }
 
-            else {
-                cout << "Failed to fetch database!!1" <<endl;
-                cout << "\n" << mysql_error(obj) <<endl;
-                exit(0);
-            }
+            else
+                Exit(obj);
+        }
+
+
+        //used to verify that the entered amount is positive
+        long int validateAmount() {
+
+            check = true;
+
+            do {
+
+                Balance = 0;
+                cin >> Balance;
+
+                if (Balance > 0)
+                    check = false;
+
+                else
+                    cout << "\nPlease enter a valid amount: " ;
+
+            } while (check);
+
+            return Balance;
         }
 
 
@@ -928,17 +973,14 @@ class Customer {
                 ss.str("");
                 //query to check if there is sufficient balance and whether the pin entered is correct
                 ss << "SELECT acc_Balance FROM balance WHERE acc_No = '" + userAccNo + "' AND acc_Balance < '" + accBalance + "' ";
-                query.clear();
-                query = ss.str();
-                qstate = queryToSql(obj, query);
+                qstate = queryToSql(obj);
                 res = mysql_store_result(obj);
 
                 if (qstate == 0 && mysql_num_rows(res) != 0) {
 
                     cout << "\nInsufficient balance!! Please check the balance." <<endl;
                     cout << "\nPress enter to go back to the user menu." ;
-                    cin.ignore();
-                    cin.get();
+                    pressEnter();
                     mysql_free_result(res);
                     userMenu(obj);
                 }
@@ -949,29 +991,26 @@ class Customer {
                     ss.str("");
                     //query to update the balance in balance table
                     ss << "UPDATE balance SET acc_Balance = acc_Balance - '" + accBalance + "' WHERE acc_No = '" + userAccNo + "' ";
-                    query.clear();
-                    query = ss.str();
-                    qstate = queryToSql(obj, query);
+                    qstate = queryToSql(obj);
 
                     if (qstate == 0) {
-                        cout << "\nRs. " << accBalance << " withdrawn from your account. Press enter to go back to user menu. " <<endl;
-                        cin.ignore();
-                        cin.get();
+
+                        cout << "\nRs. " << accBalance << " withdrawn from your account. Press enter to go back to user menu." ;
+                        pressEnter();
                         userMenu(obj);
                     }
+
                     else {
-                        cout << "\nUnable to withdraw money!! Please try again!" <<endl;
+
+                        cout << "\nUnable to withdraw money!! Please try again!\n" <<endl;
                         withdrawMoney(obj);
                     }
                 }
             }
 
 
-            else {
-                cout << "Failed to fetch database!!1" <<endl;
-                cout << "\n" << mysql_error(obj) <<endl;
-                exit(0);
-            }
+            else
+                Exit(obj);
 
         }
 
@@ -989,27 +1028,25 @@ class Customer {
                 ss.str("");
                 //query to update the balance in balance table
                 ss << "UPDATE balance SET acc_Balance = acc_Balance + '" + accBalance + "' WHERE acc_No = '" + userAccNo + "' ";
-                query.clear();
-                query = ss.str();
-                qstate = queryToSql(obj, query);
+                qstate = queryToSql(obj);
 
                 if (qstate == 0) {
-                    cout << "\nRs. " << accBalance << " deposited to your account. Press enter to go back to user menu. " <<endl;
-                    cin.ignore();
-                    cin.get();
+
+                    cout << "\nRs. " << accBalance << " deposited to your account. Press enter to go back to user menu. " ;
+                    pressEnter();
                     userMenu(obj);
                 }
+
                 else {
-                    cout << "\nUnable to deposit money!! Please try again!" <<endl;
+
+                    cout << "\nUnable to deposit money!! Please try again!\n" <<endl;
                     depositMoney(obj);
                 }
             }
 
-            else {
-                cout << "Failed to fetch database!!1" <<endl;
-                cout << "\n" << mysql_error(obj) <<endl;
-                exit(0);
-            }
+            else
+                Exit(obj);
+
         }
 
 
@@ -1024,7 +1061,7 @@ class Customer {
                     accNo = verifyAccNo(obj);
 
                     if (userAccNo == accNo)
-                        cout << "\nYou can't transfer money to the same account.\n\nPlease enter the value again: " ;
+                        cout << "\nYou can't transfer money to the same account you are logged in with.\n\nPlease enter the account no again: " ;
 
                 } while (userAccNo == accNo);
 
@@ -1033,19 +1070,13 @@ class Customer {
                 accBalance.clear();
                 accBalance = to_string(Balance);
 
-                string temp = "";
-                temp = accNo;
-                accNo = userAccNo;
-                cout << "\nPlease enter the pin of account: " ;
+                cout << "\nPlease enter the pin of your account: " ;
                 verifyAccPin(obj);
-                accNo = temp;
 
                 ss.str("");
                 //query to check if there is sufficient balance in balance table and whether the pin entered is correct
                 ss << "SELECT acc_Balance FROM balance WHERE acc_No = '" + userAccNo + "' AND acc_Balance < '" + accBalance + "' ";
-                query.clear();
-                query = ss.str();
-                qstate = queryToSql(obj, query);
+                qstate = queryToSql(obj);
                 MYSQL_RES* res;
                 res = mysql_store_result(obj);
 
@@ -1054,8 +1085,7 @@ class Customer {
                     cout << "\nTransaction not possible!! " <<endl;
                     cout << "\nInsufficient balance!! Please check the balance." <<endl;
                     cout << "\nPress enter to go back to the user menu." ;
-                    cin.ignore();
-                    cin.get();
+                    pressEnter();
                     mysql_free_result(res);
                     userMenu(obj);
                 }
@@ -1066,57 +1096,64 @@ class Customer {
                     ss.str("");
                     //update the balance in logged in account
                     ss << "UPDATE balance SET acc_Balance = acc_Balance - '" + accBalance + "' WHERE acc_No = '" + userAccNo + "' ";
-                    query.clear();
-                    query = ss.str();
-                    qstate = queryToSql(obj, query);
+                    qstate = queryToSql(obj);
 
                     if (qstate == 0) {
 
                         ss.str("");
                         //update the balance in receiving account
                         ss << "UPDATE balance SET acc_Balance = acc_Balance + '" + accBalance + "' WHERE acc_No = '" + accNo + "' ";
-                        query.clear();
-                        query = ss.str();
-                        int qstate1 = queryToSql(obj, query);
+                        qstate = queryToSql(obj);
 
-                        if (qstate1 == 0) {
+                        if (qstate == 0) {
 
-                            cout << "\nRs. " << accBalance << " transferred to account " << accNo << ". Press enter to go back to user menu. " <<endl;
-                            cin.ignore();
-                            cin.get();
+                            cout << "\nRs. " << accBalance << " transferred to account " << accNo << ". Press enter to go back to user menu. " ;
+                            pressEnter();
+                            userMenu(obj);
+                        }
+
+                        else {
+
+                            ss.str("");
+                            cout << "Transaction unsucessful!!!" <<endl;
+                            cout << "\nPress enter to go back to menu." ;
+                            pressEnter();
+                            //if updating balance at receivers end is failed, this query is used to update balance back to sender's account
+                            ss << "UPDATE balance SET acc_Balance = acc_Balance + '" + accBalance + "' WHERE acc_No = '" + userAccNo + "' ";
+                            queryToSql(obj);
                             userMenu(obj);
                         }
                     }
 
                     else {
-                        cout << "\nUnable to transfer money!! Please try again!" <<endl;
+
+                        cout << "\nUnable to transfer money!! Please try again!\n" <<endl;
                         transferMoney(obj);
                     }
                 }
             }
 
 
-            else {
-                cout << "Failed to fetch database!!1" <<endl;
-                cout << "\n" << mysql_error(obj) <<endl;
-                exit(0);
-            }
+            else
+                Exit(obj);
         }
 
 
-        //used to verify that the entered amount is positive
-        long int validateAmount() {
+        //arbitrary
+        void pressEnter() {
+            cin.ignore();
+            cin.get();
+        }
 
-            check = true;
 
-            do {
-                cin >> Balance;
-                if (Balance > 0)
-                    check = false;
-                else
-                    cout << "\nPlease enter a valid amount: " ;
-            } while (check);
-            return Balance;
+        //if connection with database is not established in a function
+        void Exit(MYSQL* obj) {
+
+            cout << "Failed to fetch database!!!\n" <<endl;
+            cout << mysql_error(obj) <<endl;
+            cout << "\nPress enter to exit." ;
+            pressEnter();
+            exit(0);
         }
 
 
