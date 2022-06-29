@@ -17,7 +17,7 @@ All the Essential Functionalities are password protected. And Password hashing i
 ### Running the Project
 #### Prerequisite :
 1. `g++` Compiler
-2. Add `MYSQL Server Files` in the project to add addditional header    files for compilation.
+2. Install `MYSQL Server Files` in the project debugger to add addditional header files for compilation.
 
 ### Functionalities for Admin :
 1. Account Creation
