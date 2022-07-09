@@ -19,6 +19,7 @@ All the Essential Functionalities are password and pin protected. And hashing is
 1. `g++` Compiler
 2. `MySQL Server`
 3. Add `MySQL Server 8.0` in the project debugger to add additional header files for compilation of code
+4. Add `libmysql.dll` in the debug folder of project
 
 ### Functionalities for Admin :
 1. Account Creation
@@ -30,6 +31,6 @@ All the Essential Functionalities are password and pin protected. And hashing is
 1. View account information
 2. Update password
 3. Update pin
-4. Withdraw Money
-5. Deposit Money
-6. Transfer Money to another account
+4. Amount Withdrawal
+5. Amount Deposit
+6. Transfer Amount to another account
